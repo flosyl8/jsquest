@@ -44,7 +44,7 @@ Contrairement à d'autres languages, il n'y a pas de type à part pour représen
 les eniters. Il existe également un objet Number, qui est un wrapper pour les nombres.
 On le verra un peu plus bas.
 
-* string : `"hello", "\nwordl", "red"`
+* **string** : `"hello", "\nwordl", "red"`
 
 Permet de représenter des données textuelles. Dans un niveau low-level, les strings
 sont des ensembles d'éléments de valeurs entières non-signés codés sur 16 bits. Chaque 
@@ -52,11 +52,11 @@ sont des ensembles d'éléments de valeurs entières non-signés codés sur 16 b
 
 Une chaine string est impossible à modifier, car c'est une valeur primitive. 
 
-* symbol 
+* **symbol** 
 
 Arrivée avec ES6. On peut faire un parallèle entre les symboles et les enum de C.
 
-* objet
+* **objet**
 
 En JS, on peut voir les objets comme des collections de propriétés. Il existe
 quatres moyens de créers des objets : littéralement, via un constructeur, via une 
@@ -125,7 +125,7 @@ function ajoute(x, y) {
 Note qu'il existe depuis ES6 le keyword `let` pour déclarer des variables locales
 à un block (`{..}`).
 
-**Cas des fonctions avec un nombre d'arguments aléatoire : `arguments`**
+* **Cas des fonctions avec un nombre d'arguments aléatoire** : `arguments`
 
 L'objet `arguments` est très utile pour définir des fonctions avec une nombre 
 d'arguments aléatoire.
@@ -154,7 +154,7 @@ souhaite passé un ensemble d'arguments sous formes d'array : `Function.prototyp
 
 `argsArray` : l'array d'arguments à passer.
 
-**Les fonctions anonymes**
+* **Les fonctions anonymes**
 
 En JS, on peut également créer des fonctions anonymes. C'est très puissant si 
 astucieusement utilisé :
@@ -170,3 +170,175 @@ a; // 4
 b; // 2
 ```
 
+###Les objets personnalisés
+
+Voici un exemple pour introduire la notion d'objets personnalisés :
+
+```js
+function Personne(prenom, nom) {
+  this.prenom = prenom;
+  this.nom = nom;
+  this.nomComplet = function () {
+    return this.prenom + ' ' + this.nom;
+  }
+  this.nomCompletInverse = function() {
+    return this.nom + ' ' + this.prenom;
+  }
+}
+var s = new Personne("Simon", "Willison");
+```
+
+Remarquons le keyword `new` : Il est très lié à `this`. Il crée un nouvel objet 
+vide et appelle ensuite la fonction spécifiée, avec `this``pointant vers ce nouvel
+objet. On appelle les fonctions prévues pour être appelées par `new` des **constructeurs**.
+L'usage est de mettre la première lettre de la fonction en majuscule.
+
+Ceci dit, notre constructeur n'est pas **efficace** : A chaque création d'un objet via 
+ce dernier, on recréer inutilement les fonctions `nomComplet` et `nomCompletInvers`.
+Il est plus efficace d'utiliser le **prototype**.
+
+```js
+function Personne(prenom, nom) {
+  this.prenom = prenom;
+  this.nom = nom;
+}
+
+Personne.prototype.nomComplet = function nomComplet () {
+  return this.prenom + ' ' + this.nom;
+}
+Personne.prototype.nomCompletInverse = function nomCompletInverse () {
+  return this.nom + ' ' + this.prenom;
+}
+```
+
+Il s'en dégage une notion **F O N D A M E N T A L E** : le **prototype**.
+On la verra plus en détails plus bas. 
+
+###Les Closures
+
+Voici un exemple simpliste mais très illustrant :
+
+```js
+function creerAdditionneur(a) {
+  return function(b) {
+    return a + b;
+  }
+}
+
+var x = creerAdditionneur(5);
+var y = creerAdditionneur(20
+x(6) // renvoie 11
+y(7) // renvoie 27
+```
+
+Expliquons schématiquement le processus : à l'éxecution d'une fonction, un objet 
+de portée est crée pour conserver les variables locales créées au sein de cette
+fonction. Il est initialisé au même moment que les variables passées en paramètres.
+On ne peut pas accéder directement à ces objets de portés. 
+Normalement, le ramasse-miettes de JS devrait supprimer l'objet de portée à la fin de 
+l'appel de la fonction. Mais la fonction renvoyée gardant une référence vers cet objet, 
+le ramasse-miette ne peut pas supprimer l'objet, et donc les variables locales sont
+toujours accessibles par l'intermédaire de la fonction interne.
+
+Ce qu'on appelle **closure** est la combinaison d'une fonction et de l'objet de 
+portée dans lequel elle a été créee.
+
+Permettant ainsi l'enregistrement d'état, elles peuvent facilement remplacer les 
+objets.
+
+
+##Les tests d'égaliés
+
+On va se focaliser ici sur trois opérations permettant de comparer des valeurs 
+
+* l'égalité strice `===`
+
+* l'égalite faible `==`
+
+* `Object.is()`, arrivée avec ES6
+
+### Egalité strice `===`
+
+L'égalite stricte compare deux valeurs et teste leur égalité. Aucune des deux valeurs
+n'est convertie implicitement en une autre valeur. Si les deux valeurs sont typés 
+différemment, elles sont considérés comme différentes.
+
+```js
+var num = 0;
+var obj = new String("0");
+var str = "0";
+var b = false;
+
+console.log(num === num); // true
+console.log(obj === obj); // true
+console.log(str === str); // true
+
+console.log(num === obj); // false
+console.log(num === str); // false
+console.log(obj === str); // false
+console.log(null === undefined); // false
+console.log(obj === null); // false
+console.log(obj === undefined); // false
+```
+
+Il existe également le test de non égalité stricte : `!==`
+
+C'est très souvent le meilleurs des opérateurs à utilisés pour un test d'égalité.
+
+###L'égalité faible avec `==`
+
+Le test d'égalité faible compare deux valeurs après les avoir converties
+en valeur d'un même type.
+
+Par exemple :
+
+```js
+0 == "0" // true
+false == 0 // true
+```
+
+Généralement, il n'est pas optimisé d'utiliser ce test, sauf si l'on sait exactement
+pourquoi.
+
+###`Object.is()`
+
+On utilise la méthode comme ceco : `Object.is(0, "0") //false`
+
+Sa force est de pouvoir traiter les valeurs très proches de zéro, 0+ et 0-. Ormis
+ces cas, il est conseillé d'utiliser `===`
+
+
+##Héritage et chaîne de prototypes
+
+On va détailler ici le prototype d'un objet et expliquer ce qu'est la **chaine de prototype**,
+indispensable pour parler
+
+JS est un language de prototype, et non de classe, bien que ES6 est implémenté 
+du sucre syntaxique pour simuler les classes.
+
+Chaque objet **possède un lien interne vers un autre objet, appelé prototype**.
+Cet objet prototype possède lui aussi un prototype, et ainsi de suite. Et cela
+jusqu'au prototype `null` qui n'a pas de prototype. Cela représente 
+**la chaine de prototypes**.
+
+Un prototype est donc un objet de référence pour un objet.
+
+###Héritage des propriétés
+
+On le repète, un prototype est un objet de référence pour un objet. Mais que cela
+signifie ?
+
+Un objet possède des propriétés propres. Ceux sont des propriétés qu'il possède
+explicitement. Elles lui sont attribués à la constructions ou plus tard dans le programme.
+Mais un objet possède aussi des propriétés héritées, qu'il possède de façon implicite.
+Ces propriétés héritées sont "transmises" par le prototype.
+
+Exemple : 
+
+```js
+var a = {a: 1, b: 2};
+var b = {c: 3, d: 4};
+b.prototype = a;
+
+b.a // 1, b à hérité de la propriété a de l'objet a.
+```
