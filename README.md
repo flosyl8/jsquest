@@ -342,3 +342,180 @@ b.prototype = a;
 
 b.a // 1, b à hérité de la propriété a de l'objet a.
 ```
+
+Point important à préciser, quand un objet hérite d'une méthode (une propriété ayant pour
+valeur une fonction), `this` fait référence à l'objet hérité.
+
+**A retenir :** Quand on souhaite accèder à une propriété d'un objet, JS parcours les propriétés
+propres de l'objet. Si elle n'est pas présente, JS cherchera dans l'objet prototype, 
+puis dans le prototype du prototype, et cela jusqu'au protype null.
+
+###Différentes façons de créer des objets et leurs chaînes de prototypes
+
+* **Litérallement** 
+
+```js
+var o = {a: 1};
+
+// L'objet o qui vient d'être créé hérite de Object.prototype.
+// o ne possède pas de propriété 'hasOwnProperty'
+// hasOwnProperty est une propriété de Object.prototype.
+// Donc o hérite de hasOwnProperty grâce à Object.prototype
+// Object.prototype a null comme prototype.
+// Voici la chaîne de prototypes : 
+// o ---> Object.prototype ---> null
+
+var a = ["yo", "bien", "?"];
+
+// Les tableaux (Array) héritent du prototype Array.prototype
+// (possédant les méthodes indexOf, forEach, etc.).
+// La chaîne de prototypes est la suivante :
+// a ---> Array.prototype ---> Object.prototype ---> null
+
+function f(){
+  return 2;
+}
+
+// Les fonctions héritent du prototype Function.prototype (avec les méthodes call, bind, etc.):
+// f ---> Function.prototype ---> Object.prototype ---> null
+```
+
+* **Avec un constructeur**
+
+On rappel qu'un constructeur est une fonction qui retourne un objet et que l'on
+appele avec l'opérateur `new`
+
+```js
+function Graph() {
+  this.sommets = [];
+  this.aretes  = [];
+}
+
+Graph.prototype = {
+  ajouteSommet: ( (v) => this.sommets.push(v) );
+}
+ 
+var g = new Graph();
+//g est un objet avec les propriétés propres sommets et aretes.
+//Il hérite du prototype Graph.prototype, et donc de la méthode ajouteSommet().
+```
+
+Un point important pour la performance** : Regardons comment nous avons définis la méthode
+dans le prototype et non pas dans le constructeur. Cela permet d'éviter de créer une même 
+fonction pour chaque objet créer avec le constructeur. Il est grandement préférable de 
+placer les méthodes génériques à des objets dans le prototype.
+C'est d'ailleurs par ce procédés que nos objets arrays par exemples (`[1,2,3]`) 
+héritent des méthodes de l'objet Array.
+
+* **Avec `Object.create()`**
+
+Cette méthode de l'objet global Object permet de créer un nouvel objet dont le 
+prototype sera celui de l'objet en argument.
+
+```js
+var a = {a: 1};
+var b = Object.create(a);
+//b.a retourne 1, b hérite de la propriété a via son prototype
+//mais ce n'est pas une propiété propre.
+```
+
+* **ES6: le keyword `class`**
+
+ES6 a apporté du sucre syntaxique pour implémenter des classes :
+`class`, `constructor`, `static`, `extends`, `super`.
+
+```js
+class Polygone {
+  constructor(hauteur, largeur) {
+    this.hauteur = hauter;
+    this.largeur = largeur;
+  }
+}
+
+class Carre extends Polygone {
+  constructor(cote) {
+    super(cote, cote);
+  }
+  get aire() {
+    return this.hauter * this.largeur;
+  }
+  set longueurCote(nouvelleLongueur) {
+    this.hauteur = nouvelleLongueur;
+    this.largeur = nouvelleLongueur;
+  }
+}
+var carre = new Carre(2);
+}
+```
+
+###Performances
+
+Une très longue chaine de prototype peut emmener à de longue recherche de 
+propriété. Ainsi, si l'on recherche une propriété propre à un objet, on utilisera
+toujours la méthode qu'hérite tout les objets : `hasOwnProperty()`.
+
+***
+
+##Closure
+
+Voyons le code suivant :
+
+```js
+function makeFunction() {
+  var nom = "Mozilla";
+  function afficheNom() {
+    alert(nom);
+  }
+  return afficheNom;
+};
+
+var maFonction = créerFonction();
+maFonction();
+```
+
+Nous sommes dans le cas typique d'une closure : Une association entre une fonction
+et l'environnement dans lequel elle a été créer.
+Comme expliquer plus haut un objet de portée est créer lors de l'appel
+de la fonction `makeFunction()`. Cette objet devrait être supprimé par le ramasse
+miette de JS à la fin de l'éxécution de la fonction. Cependant, on a retourné
+une fonction `âfficheNom()` qui à accès à cette objet d'appel stockant les variables
+internes et les arguments, il existe donc encore un lien entre un objet actif (la 
+fonction retourné) et l'objet d'appel : Le ramasse-miette ne peut vider la mémoire,
+et donc la fonction retourner peut accéder à cette mémoire : C'est pourquoi que l'on 
+dit que la fonction se "souvient" de son environnement d'appel.
+
+###Emuler des méthodes privées avec les closures
+
+L'une des grande force des closures est de pouvoir émuler des méthodes privées,
+ce que ne permet pas JS de façon native. Au-delà, cela permet de gérer un espace
+de nom global qui isole les méthodes secondaires de l'interface publique du code, ainsi
+rendus plus propre
+
+```js
+var compteur = ( function() {
+  var compteurPrive = 0;
+  function changeValeur(val) {
+    compteurPrive += val;
+  }
+  return {
+    increment: function() {
+      changeValeur(1);
+    },
+    decrement: function() {
+      changeValeur(-1);
+    },
+    valeur: function() {
+      return compteurPrivé;
+    }
+  }
+}
+console.log(compteur.valeur()); /* Affiche 0 */
+compteur.incrément();
+compteur.incrément();
+console.log(compteur.valeur()); /* Affiche 2 */
+compteur.décrément();
+console.log(compteur.valeur()); /* Affiche 1 */
+```
+
+***
+
