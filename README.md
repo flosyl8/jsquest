@@ -1,11 +1,10 @@
-    J     
-    J       
-    J       
-J J J a v a S c r i p t
+JAVASCRIPT
 
 ***
 
 #JAVASCRIPT GUIDE
+
+***
 
 ##Structure de données
 
@@ -15,7 +14,7 @@ il existe six types de données primitifs :
 
 * `"boolean"`
 
-* `"nul"` 
+* `"null"` 
 
 * `"undefined"`
 
@@ -41,7 +40,7 @@ Les valeurs immuables sont appellés *valeurs primitives*.
 * nombre : `1232, 0x363, 0b101001, 0o7727, 2,7638e10`
 
 Contrairement à d'autres languages, il n'y a pas de type à part pour représenter
-les eniters. Il existe également un objet Number, qui est un wrapper pour les nombres.
+les entiers. Il existe également un objet Number, qui est un wrapper pour les nombres.
 On le verra un peu plus bas.
 
 * **string** : `"hello", "\nwordl", "red"`
@@ -194,7 +193,7 @@ objet. On appelle les fonctions prévues pour être appelées par `new` des **co
 L'usage est de mettre la première lettre de la fonction en majuscule.
 
 Ceci dit, notre constructeur n'est pas **efficace** : A chaque création d'un objet via 
-ce dernier, on recréer inutilement les fonctions `nomComplet` et `nomCompletInvers`.
+ce dernier, on recréer inutilement les fonctions `nomComplet` et `nomCompletInverse`.
 Il est plus efficace d'utiliser le **prototype**.
 
 ```js
